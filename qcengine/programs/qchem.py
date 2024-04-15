@@ -191,8 +191,8 @@ class QChemHarness(ProgramHarness):
 
         # Check some bounds on what cannot be parsed
         #if "ccsd" in input_model.model.method.lower() or "ccd" in input_model.model.method.lower():
-#            raise InputError("Cannot handle CC* methods currently.")
-#
+        #    raise InputError("Cannot handle CC* methods currently.")
+
 #        # Build keywords
 #        keywords = {k.upper(): v for k, v in input_model.keywords.items()}
 #        keywords["INPUT_BOHR"] = "TRUE"
@@ -214,38 +214,40 @@ class QChemHarness(ProgramHarness):
 #        if input_model.model.basis:
 #            keywords["BASIS"] = input_model.model.basis
 #
-#        # Begin the input file
-#        input_file = []
-#        input_file.append(
-#            f"""$comment
-#Automatically generated Q-Chem input file by QCEngine
+        # Begin the input file
+        #input_file = []
+        #input_file.append(
+        #    f"""$comment
+#Automati#cally generated Q-Chem input file by QCEngine
 #$end
-#            """
-#        )
-#
-#        # Add Molecule, TODO: Add to QCElemental
-#        mol = input_model.molecule
-#        input_file.append("$molecule")
-#        input_file.append(f"""{int(mol.molecular_charge)} {mol.molecular_multiplicity}""")
-#
-#        for real, sym, geom in zip(mol.real, mol.symbols, mol.geometry):
-#            if real is False:
-#                raise InputError("Cannot handle ghost atoms yet.")
-#            input_file.append(f"{sym} {geom[0]:14.8f} {geom[1]:14.8f} {geom[2]:14.8f}")
-#
-#        input_file.append("$end\n")
-#
-#        # Write out the keywords
-#        input_file.append("$rem")
-#        for k, v in keywords.items():
-#            input_file.append(f"{k:20s}  {v}")
-#        input_file.append("$end\n")
+        #    """
+        #)
+
+        ## Add Molecule, TODO: Add to QCElemental
+        #mol = input_model.molecule
+        #input_file.append("$molecule")
+        #input_file.append(f"""{int(mol.molecular_charge)} {mol.molecular_multiplicity}""")
+
+        #for real, sym, geom in zip(mol.real, mol.symbols, mol.geometry):
+        #    if real is False:
+        #        raise InputError("Cannot handle ghost atoms yet.")
+        #    input_file.append(f"{sym} {geom[0]:14.8f} {geom[1]:14.8f} {geom[2]:14.8f}")
+
+        #input_file.append("$end\n")
+
+        ## Write out the keywords
+        #input_file.append("$rem")
+        #for k, v in keywords.items():
+        #    input_file.append(f"{k:20s}  {v}")
+        #input_file.append("$end\n")
 
         from geometric.molecule import Molecule
-        M = Molecule('qchem.in')
-        input_file = M.write_qcin()
+        from geometric.nifty import bohr2ang
+        M = Molecule(input_model.keywords['input_dir'])
+        M.xyzs = [np.array(input_model.molecule.geometry) * bohr2ang]
+        qcin_geom = M.write_qcin()
         ret = {
-            "infiles": {"dispatch.in": "\n".join(input_file)},
+            "infiles": {"dispatch.in": "\n".join(qcin_geom)},
             "commands": [which("qchem"), "-nt", str(config.ncores), "dispatch.in", "dispatch.out"],
             "scratch_directory": config.scratch_directory,
         }
