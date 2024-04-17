@@ -243,7 +243,7 @@ class QChemHarness(ProgramHarness):
 
         from geometric.molecule import Molecule
         from geometric.nifty import bohr2ang
-        M = Molecule(input_model.keywords['input_dir'])
+        M = Molecule(input_model.keywords.pop('input_dir'))
         M.xyzs = [np.array(input_model.molecule.geometry) * bohr2ang]
         qcin_geom = M.write_qcin()
         ret = {
