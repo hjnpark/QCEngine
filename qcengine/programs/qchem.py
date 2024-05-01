@@ -246,6 +246,12 @@ class QChemHarness(ProgramHarness):
         M = Molecule(input_model.keywords.pop('input_dir'))
         M.xyzs = [np.array(input_model.molecule.geometry) * bohr2ang]
         qcin_geom = M.write_qcin()
+        if input_model.driver == "hessian":
+            for i, line in enumerate(qcin_geom):
+                if "jobtype" in line:
+                    spaces = line.count(' ')
+                    qcin_geom[i] = "jobtype" + " "*spaces + "freq"
+                    break
         ret = {
             "infiles": {"dispatch.in": "\n".join(qcin_geom)},
             "commands": [which("qchem"), "-nt", str(config.ncores), "dispatch.in", "dispatch.out"],
@@ -282,6 +288,9 @@ class QChemHarness(ProgramHarness):
             "scf_total_energy": bdata["99.0"][1],
             "return_energy": bdata["99.0"][-1],
         }
+
+        if input_model.driver == "hessian":
+            properties['return_hessian'] = bdata["132.0"]
 
         qcvars = {}
         _mp2_methods = {"mp2", "rimp2"}
